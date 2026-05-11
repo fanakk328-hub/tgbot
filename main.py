@@ -9,7 +9,7 @@ from aiogram.filters import Command
 load_dotenv()
 # Убедись, что в файле .env есть строка TOKEN=твой_токен
 TOKEN = os.getenv("TOKEN")
-WEATHER_API_KEY = "7d130988265d37ee60a3e3da9e784cca"
+
 
 # --- ИСПРАВЛЕНО: Создаем объект bot ---
 bot = Bot(token=TOKEN)
