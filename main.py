@@ -1,13 +1,12 @@
 import os
 import asyncio
 import aiohttp
-from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.filters import Command
 
-load_dotenv()
-TOKEN = os.getenv("TOKEN")
+# Вставь свой токен от @BotFather внутрь кавычек (пример: "123456:ABCde...")
+TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_ОТ_BOTFATHER"
 WEATHER_API_KEY = "7d130988265d37ee60a3e3da9e784cca"
 
 bot = Bot(token=TOKEN)
@@ -23,7 +22,22 @@ def get_main_kb():
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 async def get_forecast(city: str):
-    return None
+    url = "openweathermap.org"
+    params = {
+        "q": city,
+        "appid": WEATHER_API_KEY,
+        "units": "metric",
+        "lang": "ru"
+    }
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    return await response.json()
+                return None
+    except Exception as e:
+        print(f"Ошибка запроса погоды: {e}")
+        return None
 
 @dp.message(Command("start"))
 async def start(message: Message):
@@ -36,7 +50,7 @@ async def city_forecast(callback: CallbackQuery):
     data = await get_forecast(city)
     
     if not data:
-        await callback.answer("⚠️ Функция погоды временно недоступна. Нужен API ключ.")
+        await callback.answer("⚠️ Не удалось получить прогноз погоды. Проверьте город.")
         return
 
     forecast_list = data["list"]
@@ -60,13 +74,13 @@ async def manual_step(callback: CallbackQuery):
 @dp.message()
 async def handle_text(message: Message):
     data = await get_forecast(message.text)
-    if data:
+    if data and data.get("list"):
         current = data["list"][0]
         temp = current["main"]["temp"]
         desc = current["weather"][0]["description"]
-        await message.answer(f"📍 {message.text}:\n🌡 {temp:+.1f}°C, {desc}")
+        await message.answer(f"📍 {data['city']['name']}:\n🌡 {temp:+.1f}°C, {desc}")
     else:
-        await message.answer("⚠️ Функция погоды временно недоступна. Нужен API ключ.")
+        await message.answer("⚠️ Город не найден или сервис погоды недоступен.")
 
 async def main():
     print("Бот успешно запущен!")
