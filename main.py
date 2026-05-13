@@ -8,6 +8,7 @@ from aiogram.filters import Command
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
+WEATHER_API_KEY = "7d130988265d37ee60a3e3da9e784cca"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
