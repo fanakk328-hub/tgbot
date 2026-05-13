@@ -6,7 +6,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, C
 from aiogram.filters import Command
 
 # Вставь свой токен от @BotFather внутрь кавычек (пример: "123456:ABCde...")
-TOKEN = "ВСТАВЬ_СЮДА_ТОКЕН_ОТ_BOTFATHER"
+TOKEN = "7d130988265d37ee60a3e3da9e784cca"
 WEATHER_API_KEY = "7d130988265d37ee60a3e3da9e784cca"
 
 bot = Bot(token=TOKEN)
