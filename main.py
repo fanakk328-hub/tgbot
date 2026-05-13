@@ -7,7 +7,6 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, C
 from aiogram.filters import Command
 
 load_dotenv()
-# Убедись, что в файле .env есть строка TOKEN=твой_токен
 TOKEN = os.getenv("TOKEN")
 
 bot = Bot(token=TOKEN)
@@ -23,8 +22,6 @@ def get_main_kb():
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 async def get_forecast(city: str):
-    # Функция без API ключа - заглушка
-    # Здесь нужно добавить реальный запрос к API погоды
     return None
 
 @dp.message(Command("start"))
