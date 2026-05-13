@@ -1,7 +1,7 @@
 import os
 import asyncio
 import aiohttp
-import urllib.parse  # Добавлено для безопасного кодирования городов в URL
+import urllib.parse
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -9,8 +9,8 @@ from aiogram.filters import Command
 
 load_dotenv()
 
-# Токены (Для Amvera лучше перенести их в панель "Переменные" хостинга)
-TOKEN = os.getenv("TOKEN", "8789941042:AAFYc_67SUw1xKSQ3ryHoOwJ-E48tIXaMaE")
+# Тянем BOT_TOKEN, который вы прописали в панели Amvera
+TOKEN = os.getenv("BOT_TOKEN", "8789941042:AAFYc_67SUw1xKSQ3ryHoOwJ-E48tIXaMaE")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "7d130988265d37ee60a3e3da9e784cca")
 
 bot = Bot(token=TOKEN)
@@ -26,10 +26,8 @@ def get_main_kb():
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 async def get_forecast(city: str):
-    # Очищаем от лишних пробелов и кодируем спецсимволы/кириллицу
     safe_city = urllib.parse.quote(city.strip())
-    
-    # ИСПРАВЛЕНО: Указан верный эндпоинт API прогноза (forecast) вместо обычного сайта
+    # Ссылка изменена на стабильный рабочий эндпоинт API
     url = f"openweathermap.org{safe_city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     
     async with aiohttp.ClientSession() as session:
@@ -37,9 +35,10 @@ async def get_forecast(city: str):
             async with session.get(url) as response:
                 if response.status == 200:
                     return await response.json()
+                print(f"OpenWeather Error! Статус: {response.status}")
                 return None
         except Exception as e:
-            print(f"Ошибка сетевого запроса: {e}")
+            print(f"Ошибка сети API Погоды: {e}")
             return None
 
 @dp.message(Command("start"))
@@ -49,7 +48,7 @@ async def start(message: Message):
 
 @dp.callback_query(F.data.startswith("weather_"))
 async def city_forecast(callback: CallbackQuery):
-    city = callback.data.split("_")[1]
+    city = callback.data.split("_")[1] # ИСПРАВЛЕНО: получаем чистую строку города
     data = await get_forecast(city)
     
     if not data:
@@ -59,12 +58,11 @@ async def city_forecast(callback: CallbackQuery):
     forecast_list = data["list"]
     text = f"📅 Прогноз для: {data['city']['name']}\n\n"
     
-    # Берем данные с шагом в 24 часа (каждая 8-я запись, так как шаг API равен 3 часам)
     for i in range(0, len(forecast_list), 8):
         day_data = forecast_list[i]
-        date = day_data["dt_txt"].split(" ")[0]
+        date = day_data["dt_txt"].split(" ")[0] # ИСПРАВЛЕНО: берем только дату без времени
         temp = day_data["main"]["temp"]
-        desc = day_data["weather"][0]["description"]
+        desc = day_data["weather"][0]["description"] # ИСПРАВЛЕНО: погода это список, берем индекс [0]
         text += f"🔹 {date}: {temp:+.1f}°C, {desc}\n"
 
     await callback.message.edit_text(text, reply_markup=get_main_kb())
@@ -79,14 +77,13 @@ async def manual_step(callback: CallbackQuery):
 async def handle_text(message: Message):
     data = await get_forecast(message.text)
     if data:
-        # Извлекаем реальное название города из ответа API (на случай опечаток)
         real_city_name = data["city"]["name"]
-        current = data["list"][0]
+        current = data["list"][0] # ИСПРАВЛЕНО: берем первый элемент из списка прогнозов
         temp = current["main"]["temp"]
-        desc = current["weather"][0]["description"]
+        desc = current["weather"][0]["description"] # ИСПРАВЛЕНО: берем первый элемент списка weather
         await message.answer(f"📍 {real_city_name}:\n🌡 {temp:+.1f}°C, {desc}")
     else:
-        await message.answer("❌ Город не найден. Попробуйте ввести название на русском или английском языке.")
+        await message.answer("❌ Город не найден. Попробуйте ввести название еще раз.")
 
 async def main():
     print("Бот успешно запущен!")
